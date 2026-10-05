@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2f4b3c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Wellness Planner Pro</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#e8e4d6;
+      --surface:#f8f6f0;
+      --ink:#1f2a22;
+      --muted:#6d7569;
+      --primary:#2f4b3c;
+      --primary-2:#4a6e59;
+      --accent:#c1592f;
+      --line:#d8d0bc;
+      --danger:#a3402d;
+      --ok:#3d6d4f;
+      --shadow:0 8px 24px rgba(12,20,17,0.1);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{
+      background:var(--bg);
+      color:var(--ink);
+      font-family:Arial,Helvetica,sans-serif;
+    }
+    a{color:var(--accent);text-decoration:none}
+    button,input,select,textarea{font:inherit}
+    .hidden{display:none!important}
+    #auth{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+      background:linear-gradient(135deg,#eef1eb,#e8e1d1 60%,#f6f3ed);
+    }
+    .auth-card{
+      width:min(100%,420px);background:var(--surface);border:1px solid var(--line);
+      border-radius:18px;box-shadow:var(--shadow);padding:28px 22px;
+    }
+    .auth-card h1{margin:0 0 8px;font-size:2rem}
+    .tag{color:var(--muted);margin-bottom:18px}
+    .field{margin-bottom:14px}
+    .field label{display:block;margin-bottom:6px;color:var(--muted);font-size:0.8rem}
+    .field input,.field select,.field textarea{
+      width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;color:var(--ink);
+    }
+    .btn{
+      display:inline-block;border:none;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:#fff;font-weight:700;cursor:pointer;padding:11px 16px;
+    }
+    .btn.ghost{
+      background:transparent;color:var(--primary);border:1px solid var(--line);
+    }
+    .btn.small{padding:8px 12px;font-size:0.85rem}
+    .switch-row{margin-top:16px;text-align:center;color:var(--muted);font-size:0.95rem}
+    .error{min-height:20px;margin-bottom:8px;color:var(--danger);font-size:0.82rem}
+    #app{display:none;min-height:100vh;flex-direction:column}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      background:linear-gradient(135deg,#2f4b3c,#446c58,#c1592f);color:#fff;
+      padding:18px 20px;box-shadow:var(--shadow);
+    }
+    .brand{font-size:1.35rem;font-weight:700}
+    .brand span{color:#f7d9ae}
+    .user-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .icon-btn{
+      border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);
+      color:#fff;padding:8px 10px;border-radius:8px;cursor:pointer;
+    }
+    nav.tabs{
+      display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,0.35);overflow-x:auto;
+    }
+    nav.tabs button{
+      background:#fff;border:1px solid var(--line);color:var(--ink);border-radius:999px;
+      padding:8px 12px;cursor:pointer;white-space:nowrap;
+    }
+    nav.tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    main{width:min(100%,980px);margin:0 auto;padding:24px 18px 40px;flex:1}
+    .view{display:none}.view.active{display:block}
+    .hero{
+      position:relative;overflow:hidden;background:linear-gradient(135deg,#2f4b3c,#456d59,#c1592f);
+      color:#fff;border-radius:18px;padding:22px;display:flex;justify-content:space-between;align-items:center;gap:12px;
+      box-shadow:var(--shadow);margin-bottom:20px;
+    }
+    .hero:after{
+      content:"🌿";position:absolute;right:-8px;bottom:-18px;font-size:5rem;opacity:0.14;
+    }
+    .hero h2{margin:0 0 6px;font-size:1.75rem}
+    .hero p{margin:0;color:rgba(255,255,255,0.9)}
+    .ring{
+      --pct:0;width:94px;height:94px;border-radius:50%;
+      background:conic-gradient(#f4d7b1 calc(var(--pct) * 1%), rgba(255,255,255,0.2) 0);
+      display:grid;place-items:center;position:relative;z-index:1;
+    }
+    .ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:#2d4738}
+    .ring b{position:relative;z-index:1;font-size:1.2rem}
+    .section-head{
+      display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:20px 0 14px;
+    }
+    .section-head h2{margin:0;font-size:1.3rem}
+    .section-quote{border-left:3px solid var(--accent);padding-left:10px;font-style:italic;margin:0 0 14px;color:var(--ink)}
+    .purpose-note{margin:0 0 16px;color:var(--ink);opacity:0.9}
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+    .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+    .stat .num{font-size:1.8rem;font-weight:700;color:var(--primary)}
+    .stat .label{color:var(--muted);font-size:0.75rem}
+    .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+    .list-row{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--line)}
+    .list-row:last-child{border-bottom:none}
+    .check{width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);background:transparent;display:grid;place-items:center;color:#fff;cursor:pointer;font-weight:700;flex-shrink:0}
+    .check.done{background:var(--primary);border-color:var(--primary)}
+    .txt{flex:1;min-width:0;padding:4px 0;border:none;background:transparent;color:var(--ink)}
+    .txt.done{text-decoration:line-through;color:var(--muted)}
+    .meta{background:rgba(47,75,60,0.06);border:1px solid var(--line);border-radius:999px;padding:5px 8px;color:var(--muted);font-size:0.72rem;white-space:nowrap}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:2px}
+    .dot.low{background:#6b7566}.dot.med{background:#c1592f}.dot.high{background:#a3402d}
+    .del{background:transparent;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer}
+    .empty{border:1px dashed var(--line);background:rgba(255,255,255,0.15);color:var(--muted);border-radius:12px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px}
+    .week-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+    .day-col{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:var(--shadow)}
+    .day-col h3{margin:0 0 8px;color:var(--primary);font-size:0.95rem}
+    .day-item{border-bottom:1px solid var(--line);padding:6px 0;font-size:0.85rem}
+    .day-item:last-child{border-bottom:none}
+    .day-item.work{font-weight:700;color:var(--primary)}
+    .bar-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+    .bar-label{width:120px;color:var(--muted);font-size:0.8rem}
+    .bar-track{flex:1;height:12px;background:#e7e3da;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+    .bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:999px}
+    .bar-val{width:40px;text-align:right;color:var(--muted);font-size:0.8rem}
+    .mode-btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 12px;cursor:pointer}
+    .mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .timer-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .timer-display{font-size:2rem;font-weight:700;color:var(--primary)}
+    .ach-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .ach-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+    .ach-card.unlocked{border-color:var(--primary)}
+    .ach-icon{font-size:1.7rem}
+    .ach-title{font-weight:700;margin-top:8px}
+    .ach-desc{color:var(--muted);font-size:0.8rem;margin-top:6px}
+    #alarmToasts{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:1000}
+    .alarm-toast{background:var(--primary);color:#fff;border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);min-width:220px}
+    @media (max-width:640px){.topbar{padding:14px 16px}.brand{font-size:1.1rem}main{padding:16px 12px 24px}.hero{padding:18px}.timer-display{font-size:1.5rem}}
+  </style>
+</head>
+<body>
+
+  <div id="auth">
+    <div class="auth-card">
+      <h1 id="authTitle">Welcome back</h1>
+      <div class="tag">Plan your tasks, workouts, habits, and life goals.</div>
+
+      <div class="field hidden" id="nameField">
+        <label>Name</label>
+        <input id="nameInput" type="text" placeholder="Jordan Lee" />
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input id="emailInput" type="email" placeholder="you@example.com" />
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input id="passInput" type="password" placeholder="••••••••" />
+      </div>
+
+      <div class="error" id="authError"></div>
+      <button class="btn" id="authSubmit">Log in</button>
+
+      <div class="switch-row">
+        <span id="switchText">Don't have an account?</span>
+        <a href="#" id="switchLink">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="alarmToasts"></div>
+
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">Wellness <span>Planner Pro</span></div>
+      <div class="user-row">
+        <span id="userName"></span>
+        <button class="icon-btn" id="themeBtn" title="Toggle theme">🌓</button>
+        <button class="btn ghost small" id="logoutBtn">Log out</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="active" data-view="dashboard">Your Progress</button>
+      <button data-view="career">Career</button>
+      <button data-view="tasks">Tasks</button>
+      <button data-view="diet">Diet</button>
+      <button data-view="workouts">Workouts</button>
+      <button data-view="habits">Habits</button>
+      <button data-view="alarms">Alarms</button>
+      <button data-view="schedule">Schedule</button>
+      <button data-view="analytics">Analytics</button>
+      <button data-view="achievements">Achievements</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+
+    <main>
+      <section class="view active" id="view-dashboard">
+        <div class="hero">
+          <div>
+            <h2 id="heroTitle">Hello 👋</h2>
+            <p id="heroSub">Here’s how your day is shaping up.</p>
+          </div>
+          <div class="ring" id="heroRing"><b id="heroPct">0%</b></div>
+        </div>
+
+        <div class="section-head"><h2>Purpose</h2></div>
+        <p class="purpose-note">Wellness Planner Pro helps you manage your goals, tasks, workouts, routines, diet, and career progress in one place.</p>
+
+        <div class="section-head"><h2>Today</h2></div>
+        <p class="section-quote">“You have power over your mind — not outside events.” — Marcus Aurelius</p>
+
+        <div class="stat-row" id="statRow"></div>
+
+        <div class="section-head"><h2>Open tasks</h2></div>
+        <div id="dashTasks"></div>
+
+        <div class="section-head" style="margin-top:22px;"><h2>Premium</h2></div>
+        <div class="box">
+          <div style="font-size:1.1rem; font-weight:700; margin-bottom:8px;">
+            Wellness Planner <span style="color:var(--accent)">Premium</span>
+          </div>
+          <p class="purpose-note" id="premiumCopy" style="margin-bottom:8px;">
+            Start with a 1-month free trial, then ₹29/month for premium progress features.
+          </p>
+          <button class="btn small" id="premiumBtn" style="width:auto;">Start free trial</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-career">
+        <div class="section-head"><h2>Career</h2></div>
+        <p class="section-quote">“Small opportunities are often the beginning of great enterprises.” — Demosthenes</p>
+
+        <div class="box">
+          <div class="field">
+            <label>Field</label>
+            <input id="careerField" type="text" placeholder="Cricketer, Engineer, Student..." />
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <input id="careerRole" type="text" placeholder="Batter, Frontend Developer..." />
+          </div>
+          <div class="field">
+            <label>Level</label>
+            <select id="careerLevel">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <button class="btn small" id="saveCareer" style="width:auto;">Save career info</button>
+          <div id="careerMsg" style="margin-top:10px; color:var(--ok); font-size:0.82rem;"></div>
+        </div>
+
+        <div class="box">
+          <button class="btn small" id="suggestCareerTasks" style="width:auto;">Generate career tasks</button>
+        </div>
+
+        <div class="box">
+          <h3>Career tasks</h3>
+          <div id="careerTaskList"></div>
+          <form id="careerTaskForm" style="margin-top:12px;">
+            <div class="field" style="margin-bottom:0;">
+              <input id="careerTaskInput" type="text" placeholder="Add a career goal..." />
+            </div>
+            <div style="margin-top:10px;">
+              <button class="btn small" type="submit" style="width:auto;">Add task</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="box">
+          <h3>Career challenges</h3>
+          <div class="field">
+            <textarea id="careerProblemInput" rows="3" placeholder="Example: I keep losing focus during practice..."></textarea>
+          </div>
+          <button class="btn small" id="getCareerSolutions" style="width:auto;">Get solutions</button>
+          <div id="careerProblemList" style="margin-top:12px;"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-tasks">
+        <div class="section-head"><h2>Tasks</h2></div>
+        <div class="box">
+          <form id="taskForm">
+            <div class="field">
+              <label>Task</label>
+              <input id="taskInput" type="text" placeholder="Example: Finish workout plan" />
+            </div>
+            <div class="field" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:120px;">
+                <label>Priority</label>
+                <select id="taskPriority">
+                  <option value="low">Low</option>
+                  <option value="med" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div style="flex:1; min-width:120px;">
+                <label>Day</label>
+                <select id="taskDay">
+                  <option value="">Any day</option>
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                  <option>Saturday</option>
+                  <option>Sunday</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn small" type="submit" style="width:auto;">Add task</button>
+          </form>
+        </div>
+        <div id="taskList"></div>
+      </section>
+
+      <section class="view" id="view-diet">
+        <div class="section-head"><h2>Diet</h2></div>
+        <p class="section-quote">“Take care of your body. It’s the only place you have to live.” — Jim Rohn</p>
+
+        <div class="box">
+          <div class="field">
+            <label>Diet plan</label>
+            <textarea id="dietPlanInput" rows="7" placeholder="Write your plan here..."></textarea>
+          </div>
+          <button class="btn small" id="saveDietPlan" style="width:auto;">Save diet plan</button>
+          <div id="dietPlanMsg" style="margin-top:10px; color:var(--ok); font-size:0.82rem;"></div>
+        </div>
+
+        <div id="dietExampleList"></div>
+      </section>
+
+      <section class="view" id="view-workouts">
+        <div class="section-head"><h2>Workouts</h2></div>
+        <div class="box">
+          <form id="workoutForm">
+            <div class="field">
+              <label>Workout</label>
+              <input id="workoutInput" type="text" placeholder="Example: Push-ups, walk, jog..." />
+            </div>
+
+            <div class="field" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:120px;">
+                <label>Type</label>
+                <select id="workoutType"></select>
+              </div>
+              <div style="flex:1; min-width:120px;">
+                <label>Day</label>
+                <select id="workoutDay">
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                  <option>Saturday</option>
+                  <option>Sunday</option>
+                </select>
+              </div>
+              <div style="flex:1; min-width:120px;">
+                <label>Minutes</label>
+                <input id="workoutMin" type="number" min="1" value="30" />
+              </div>
+            </div>
+
+            <button class="btn small" type="submit" style="width:auto;">Add workout</button>
+          </form>
+        </div>
+
+        <div class="box">
+          <h3>Suggested split</h3>
+          <div class="week-grid" id="splitGrid"></div>
+        </div>
+
+        <div id="workoutList"></div>
+      </section>
+
+      <section class="view" id="view-habits">
+        <div class="section-head"><h2>Habits</h2></div>
+
+        <div class="box">
+          <form id="habitForm">
+            <div class="field">
+              <label>Habit</label>
+              <input id="habitInput" type="text" placeholder="Example: Drink water, read 20 min..." />
+            </div>
+            <div class="field">
+              <label>Type</label>
+              <select id="habitType">
+                <option value="good">Good habit</option>
+                <option value="bad">Avoid bad habit</option>
+              </select>
+            </div>
+            <button class="btn small" type="submit" style="width:auto;">Add habit</button>
+          </form>
+        </div>
+
+        <div class="box">
+          <h3>Good habits</h3>
+          <div id="habitListGood"></div>
+        </div>
+
+        <div class="box">
+          <h3>Bad habits</h3>
+          <div id="habitListBad"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-alarms">
+        <div class="section-head"><h2>Alarms</h2></div>
+
+        <div class="box">
+          <form id="alarmForm">
+            <div class="field">
+              <label>Alarm label</label>
+              <input id="alarmLabel" type="text" placeholder="Wake up, Gym time..." />
+            </div>
+            <div class="field">
+              <label>Time</label>
+              <input id="alarmTime" type="time" />
+            </div>
+            <div class="field">
+              <label>Type</label>
+              <select id="alarmType">
+                <option value="wakeup">Wake up</option>
+                <option value="workout">Workout</option>
+                <option value="routine">Routine</option>
+                <option value="sleep">Sleep</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Days</label>
+              <div id="alarmDays" style="display:flex; gap:8px; flex-wrap:wrap;"><
